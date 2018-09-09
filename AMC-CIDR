@@ -1,0 +1,44 @@
+// ==UserScript==
+// @name           Aventail CIDR resource autocomplete
+// @description    Put the CIDR address in the name field, this script will autofill the rest.
+// @namespace      av_add_resource_cidr
+// @updateURL   http://our.internal.update.url
+// @version        0.0.2
+// @include        http*://*/configResource.do
+// @include        http*://*/addResource.do
+
+// ==/UserScript==
+
+function long2ip(l) {
+    with (Math) {
+        var ip1 = floor(l/pow(256,3));
+        var ip2 = floor((l%pow(256,3))/pow(256,2));
+        var ip3 = floor(((l%pow(256,3))%pow(256,2))/pow(256,1));
+        var ip4 = floor((((l%pow(256,3))%pow(256,2))%pow(256,1))/pow(256,0));
+    };
+    return ip1 + '.' + ip2 + '.' + ip3 + '.' + ip4;
+};
+
+function cidr2long(cidr) {
+    with (Math) {
+        var retval = (pow(2,32)-pow(2,(32-cidr)));
+    };
+    return retval;
+};
+
+var ipInput = document.getElementsByName("subnetIp")[0];
+var maskInput = document.getElementsByName("subnetMask")[0];
+var nameInput = document.getElementsByName("name")[0];
+var commentInput = document.getElementsByName("comment")[0];
+
+if(ipInput !== null){
+	nameInput.addEventListener('change',function(){
+		if(nameInput.value.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/)){
+			var cidrParts = nameInput.value.split("/");
+			commentInput.value = nameInput.value;
+			ipInput.value = cidrParts[0];
+			maskInput.value = long2ip(cidr2long(cidrParts[1]));
+		}
+
+	},false);
+}
